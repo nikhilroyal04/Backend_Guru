@@ -1,8 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
-const connectDB = require("./database/db");
-const consoleManager = require("./utils/consoleManager");
+const connectDB = require("../database/db");
+const consoleManager = require("../utils/consoleManager");
 const cookieParser = require("cookie-parser");
 
 dotenv.config();
@@ -33,14 +33,14 @@ app.use(cookieParser());
 
 // Import routes
 
-const loginRoute = require("./routes/auth/login");
-const profileRoute = require("./routes/auth/profile");
-const userRoute = require("./routes/user/user_routes");
-const categoryRoute = require("./routes/categories/category_routes");
-const roleRoute = require("./routes/role/role_routes");
-const iPhoneRoute = require("./routes/product/iPhones/iPhone_routes");
-const androidRoute = require("./routes/product/androids/android_routes");
-const accessoryRoute = require("./routes/product/accessories/accessories_routes");
+const loginRoute = require("../routes/auth/login");
+const profileRoute = require("../routes/auth/profile");
+const userRoute = require("../routes/user/user_routes");
+const categoryRoute = require("../routes/categories/category_routes");
+const roleRoute = require("../routes/role/role_routes");
+const iPhoneRoute = require("../routes/product/iPhones/iPhone_routes");
+const androidRoute = require("../routes/product/androids/android_routes");
+const accessoryRoute = require("../routes/product/accessories/accessories_routes");
 
 app.use("/v2/auth", loginRoute);
 app.use("/v2/get", profileRoute);
