@@ -1,5 +1,6 @@
 const AccessoryModel = require("../../../models/product/accessories/accessoriesModel");
 const consoleManager = require("../../../utils/consoleManager");
+const { calculateDiscount } = require("../../../utils/calculateDiscount");
 
 class AccessoryService {
   async createAccessory(data) {
