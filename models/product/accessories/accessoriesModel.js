@@ -17,6 +17,14 @@ const variantSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  originalPrice: {
+    type: String,       
+    required: false,
+  },
+  priceOff: {
+    type: String,       
+    required: false,
+  },
   quantity: {
     type: Number,
     required: true,
@@ -61,14 +69,6 @@ const accessorySchema = new mongoose.Schema({
     type: String,
     enum: ["Active", "Inactive"],
     default: "Active",
-  },
-  originalPrice: {
-    type: String,       
-    required: false,
-  },
-  priceOff: {
-    type: String,       
-    required: false,
   },
   categoryName: {
     type: String,
