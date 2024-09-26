@@ -91,36 +91,105 @@ router.get('/getAllAccessories', async (req, res) => {
     const query = {};
 
     if (name) {
-      query.name = { $regex: new RegExp(name, 'i') }; // Case-insensitive match for name
+      query.name = { $regex: new RegExp(name, 'i') }; 
     }
 
     if (type) {
-      query.type = { $eq: type }; // Exact match for type (case-sensitive)
+      query.type = { $regex: new RegExp(type, 'i') }; 
     }
 
     if (compatibility) {
-      query.compatibility = { $regex: new RegExp(compatibility, 'i') }; // Case-insensitive match for compatibility
+      query.compatibility = { $regex: new RegExp(compatibility, 'i') }; 
     }
 
     if (condition) {
-      query.condition = { $eq: condition }; // Exact match for condition (case-sensitive)
+      query.condition = { $regex: new RegExp(condition, 'i') }; 
     }
 
     if (warranty) {
-      query.warranty = { $eq: warranty }; // Exact match for warranty (case-sensitive)
+      query.warranty = { $regex: new RegExp(warranty, 'i') }; 
     }
 
+    // Fetch all accessories based on the initial query (without filtering variants yet)
     const accessories = await accessoryService.getAllAccessories(query, skip, limitNumber);
 
     const filteredAccessories = accessories.map(accessory => {
       const matchingVariants = accessory.variants.filter(variant => {
-        const matchesColor = color ? variant.color.toLowerCase() === color.toLowerCase() : true; // Case-insensitive match for color
-        const matchesPrice = price ? variant.price <= price : true; // Treat price as string
+        const matchesColor = color ? variant.color.toLowerCase().includes(color.toLowerCase()) : true; 
+        const matchesPrice = price ? variant.price <= price : true; 
         return matchesColor && matchesPrice;
       });
       return { ...accessory._doc, variants: matchingVariants };
-    }).filter(accessory => accessory.variants.length > 0); // Only include accessories with matching variants
+    }).filter(accessory => accessory.variants.length > 0); 
 
+    // Calculate the total count of filtered accessories
+    const totalCount = filteredAccessories.length;
+
+    return ResponseManager.sendSuccess(res, {
+      accessories: filteredAccessories,
+      totalPages: Math.ceil(totalCount / limitNumber),
+      currentPage: pageNumber,
+      totalCount,
+    }, 200, 'Accessories fetched successfully');
+  } catch (err) {
+    ConsoleManager.error(`Error fetching accessories: ${err.message}`);
+    return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error fetching accessories: ${err.message}`);
+  }
+});
+
+router.get('/user/getAllAccessories', async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      name,
+      type,
+      compatibility,
+      color,
+      price,
+      condition,
+      warranty
+    } = req.query;
+
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const query = {};
+
+    if (name) {
+      query.name = { $regex: new RegExp(name, 'i') }; 
+    }
+
+    if (type) {
+      query.type = { $regex: new RegExp(type, 'i') }; 
+    }
+
+    if (compatibility) {
+      query.compatibility = { $regex: new RegExp(compatibility, 'i') }; 
+    }
+
+    if (condition) {
+      query.condition = { $regex: new RegExp(condition, 'i') }; 
+    }
+
+    if (warranty) {
+      query.warranty = { $regex: new RegExp(warranty, 'i') }; 
+    }
+
+    // Fetch all accessories based on the initial query (without filtering variants yet)
+    const accessories = await accessoryService.getActiveAccessories(query, skip, limitNumber);
+
+    const filteredAccessories = accessories.map(accessory => {
+      const matchingVariants = accessory.variants.filter(variant => {
+        const matchesColor = color ? variant.color.toLowerCase().includes(color.toLowerCase()) : true; 
+        const matchesPrice = price ? variant.price <= price : true; 
+        return matchesColor && matchesPrice;
+      });
+      return { ...accessory._doc, variants: matchingVariants };
+    }).filter(accessory => accessory.variants.length > 0); 
+
+    // Calculate the total count of filtered accessories
     const totalCount = filteredAccessories.length;
 
     return ResponseManager.sendSuccess(res, {
@@ -242,6 +311,52 @@ router.delete('/deleteAccessory/:id', async (req, res) => {
   } catch (err) {
     ConsoleManager.error(`Error deleting Accessory: ${err.message}`);
     return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error deleting Accessory: ${err.message}`);
+  }
+});
+
+
+// Purchase Accessory and decrease quantity
+router.put('/purchaseAccessory/:id', async (req, res) => {
+  try {
+    const { variantId, quantityToPurchase } = req.body;
+
+    // Validate required fields
+    if (!variantId) return ResponseManager.handleBadRequestError(res, 'Variant ID is required');
+    if (!quantityToPurchase || quantityToPurchase <= 0) return ResponseManager.handleBadRequestError(res, 'Valid quantity to purchase is required');
+
+    // Find the Accessory by ID
+    const Accessory = await accessoryService.getAccessoryById(req.params.id);
+    if (!Accessory) {
+      return ResponseManager.sendSuccess(res, [], 200, 'Accessory not found');
+    }
+
+    // Find the variant by ID and decrease its quantity
+    const variantIndex = Accessory.variants.findIndex(variant => variant._id.toString() === variantId);
+    if (variantIndex === -1) {
+      return ResponseManager.handleBadRequestError(res, 'Variant not found');
+    }
+
+    const selectedVariant = Accessory.variants[variantIndex];
+    if (selectedVariant.quantity < quantityToPurchase) {
+      return ResponseManager.handleBadRequestError(res, 'Not enough stock available');
+    }
+
+    // Decrease the quantity
+    selectedVariant.quantity -= quantityToPurchase;
+
+    // If the quantity becomes 0, set the variant's status to "soldout"
+    if (selectedVariant.quantity === 0) {
+      selectedVariant.status = "soldout";
+    }
+
+    // Save the updated Accessory
+    const updatedAccessory = await Accessory.save();
+
+    ConsoleManager.log(`Accessory purchased: ${JSON.stringify(updatedAccessory)}`);
+    return ResponseManager.sendSuccess(res, updatedAccessory, 200, 'Purchase successful, quantity updated');
+  } catch (err) {
+    ConsoleManager.error(`Error purchasing Accessory: ${err.message}`);
+    return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error purchasing Accessory: ${err.message}`);
   }
 });
 

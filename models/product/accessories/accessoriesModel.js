@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const variantSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true, 
+  },
   color: {
     type: String,
     required: true,
@@ -17,6 +21,11 @@ const variantSchema = new mongoose.Schema({
     type: Number,
     required: true,
     min: 0,
+  },
+  status: {
+    type: String,
+    enum: ["available", "soldout"],
+    default: "available",
   },
 });
 
@@ -50,8 +59,8 @@ const accessorySchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["available", "soldout"],
-    default: "available",
+    enum: ["Active", "Inactive"],
+    default: "Active",
   },
   categoryName: {
     type: String,

@@ -5,7 +5,7 @@ module.exports.uploadMedia = (fileBuffer) => {
   return new Promise((resolve, reject) => {
     // Limit the size of the image before resizing, sharp automatically retains aspect ratio
     sharp(fileBuffer)
-      .resize({ width: 1000, height: 1000, fit: "inside" }) // Ensure max resolution is 1000x1000
+      .resize({ width: 1000, height: 1000, fit: "inside" }) 
       .toBuffer()
       .then((resizedBuffer) => {
         cloudinary.uploader.upload_stream(

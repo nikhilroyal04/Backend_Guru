@@ -93,15 +93,15 @@ router.get('/getAlliPhones', async (req, res) => {
     const query = {};
 
     if (model) {
-      query.model = { $eq: model.toLowerCase() };  // Exact match for model (case-insensitive)
+      query.model = { $regex: new RegExp(model, 'i') };  
     }
 
     if (repaired) {
-      query.repaired = repaired === 'true' ? 'Yes' : 'No';  // Exact match for repaired status (Yes/No)
+      query.repaired = repaired === 'true' ? 'Yes' : 'No'; 
     }
 
     if (age) {
-      query.age = { $eq: age.toLowerCase() };  // Exact match for age (case-insensitive)
+      query.age = { $regex: new RegExp(age, 'i') };  
     }
 
     // Fetch the iPhones based on the initial query (without filtering variants yet)
@@ -113,40 +113,133 @@ router.get('/getAlliPhones', async (req, res) => {
       // Normalize the iPhone properties for filtering
       const normalizedColor = color ? color.toLowerCase() : null;
       const normalizedStorage = storage ? storage.toLowerCase() : null;
-      const normalizedPrice = price ? price.toString() : null;  // Keep as string
-      const normalizedBatteryHealth = batteryHealth ? batteryHealth.toLowerCase() : null;  // Keep as string
+      const normalizedPrice = price ? price.toString() : null;  
+      const normalizedBatteryHealth = batteryHealth ? batteryHealth.toLowerCase() : null;  
 
-      // Filter variants based on color
+      // Filter variants based on partial, case-insensitive match for color
       if (normalizedColor) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.color.toLowerCase() === normalizedColor
+          new RegExp(normalizedColor, 'i').test(variant.color)
         );
       }
 
-      // Further filter based on storage
+      // Further filter based on partial, case-insensitive match for storage
       if (normalizedStorage) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.storage.toLowerCase() === normalizedStorage
+          new RegExp(normalizedStorage, 'i').test(variant.storage)
         );
       }
 
       // Filter based on price (string comparison)
       if (normalizedPrice) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.price <= normalizedPrice  // String comparison
+          variant.price <= normalizedPrice  
         );
       }
 
-      // Filter based on battery health (exact match)
+      // Filter based on battery health (partial, case-insensitive match)
       if (normalizedBatteryHealth) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.batteryHealth === normalizedBatteryHealth  // Exact match
+          new RegExp(normalizedBatteryHealth, 'i').test(variant.batteryHealth)
         );
       }
 
       // Return iPhone with only the matching variants
       return { ...iPhone._doc, variants: matchingVariants };
-    }).filter(iPhone => iPhone.variants.length > 0);  // Remove iPhones with no matching variants
+    }).filter(iPhone => iPhone.variants.length > 0); 
+
+    // Calculate the total count of iPhones based on the filtered results
+    const totalCount = filteredIPhones.length;
+
+    return ResponseManager.sendSuccess(res, {
+      iPhones: filteredIPhones,
+      totalPages: Math.ceil(totalCount / limitNumber),
+      currentPage: pageNumber,
+      totalCount,
+    }, 200, 'iPhones fetched successfully');
+  } catch (err) {
+    ConsoleManager.error(`Error fetching iPhones: ${err.message}`);
+    return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error fetching iPhones: ${err.message}`);
+  }
+});
+
+// Get Active iPhones
+
+router.get('/user/getAlliPhones', async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 20, 
+      model, 
+      color, 
+      storage, 
+      price, 
+      batteryHealth, 
+      repaired, 
+      age 
+    } = req.query;
+
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const query = {};
+
+    if (model) {
+      query.model = { $regex: new RegExp(model, 'i') };  
+    }
+
+    if (repaired) {
+      query.repaired = repaired === 'true' ? 'Yes' : 'No'; 
+    }
+
+    if (age) {
+      query.age = { $regex: new RegExp(age, 'i') };  
+    }
+
+    // Fetch the iPhones based on the initial query (without filtering variants yet)
+    const iPhones = await iPhoneService.getActiveiPhones(query, skip, limitNumber);
+
+    const filteredIPhones = iPhones.map(iPhone => {
+      let matchingVariants = iPhone.variants;
+
+      // Normalize the iPhone properties for filtering
+      const normalizedColor = color ? color.toLowerCase() : null;
+      const normalizedStorage = storage ? storage.toLowerCase() : null;
+      const normalizedPrice = price ? price.toString() : null;  
+      const normalizedBatteryHealth = batteryHealth ? batteryHealth.toLowerCase() : null;  
+
+      // Filter variants based on partial, case-insensitive match for color
+      if (normalizedColor) {
+        matchingVariants = matchingVariants.filter(variant =>
+          new RegExp(normalizedColor, 'i').test(variant.color)
+        );
+      }
+
+      // Further filter based on partial, case-insensitive match for storage
+      if (normalizedStorage) {
+        matchingVariants = matchingVariants.filter(variant =>
+          new RegExp(normalizedStorage, 'i').test(variant.storage)
+        );
+      }
+
+      // Filter based on price (string comparison)
+      if (normalizedPrice) {
+        matchingVariants = matchingVariants.filter(variant =>
+          variant.price <= normalizedPrice  
+        );
+      }
+
+      // Filter based on battery health (partial, case-insensitive match)
+      if (normalizedBatteryHealth) {
+        matchingVariants = matchingVariants.filter(variant =>
+          new RegExp(normalizedBatteryHealth, 'i').test(variant.batteryHealth)
+        );
+      }
+
+      // Return iPhone with only the matching variants
+      return { ...iPhone._doc, variants: matchingVariants };
+    }).filter(iPhone => iPhone.variants.length > 0); 
 
     // Calculate the total count of iPhones based on the filtered results
     const totalCount = filteredIPhones.length;
@@ -275,5 +368,53 @@ router.delete('/deleteiPhone/:id', async (req, res) => {
     return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error deleting iPhone: ${err.message}`);
   }
 });
+
+
+// Purchase iPhone and decrease quantity
+router.put('/purchaseiPhone/:id', async (req, res) => {
+  try {
+    const { variantId, quantityToPurchase } = req.body;
+
+    // Validate required fields
+    if (!variantId) return ResponseManager.handleBadRequestError(res, 'Variant ID is required');
+    if (!quantityToPurchase || quantityToPurchase <= 0) return ResponseManager.handleBadRequestError(res, 'Valid quantity to purchase is required');
+
+    // Find the iPhone by ID
+    const iPhone = await iPhoneService.getiPhoneById(req.params.id);
+    if (!iPhone) {
+      return ResponseManager.sendSuccess(res, [], 200, 'iPhone not found');
+    }
+
+    // Find the variant by ID and decrease its quantity
+    const variantIndex = iPhone.variants.findIndex(variant => variant._id.toString() === variantId);
+    if (variantIndex === -1) {
+      return ResponseManager.handleBadRequestError(res, 'Variant not found');
+    }
+
+    const selectedVariant = iPhone.variants[variantIndex];
+    if (selectedVariant.quantity < quantityToPurchase) {
+      return ResponseManager.handleBadRequestError(res, 'Not enough stock available');
+    }
+
+    // Decrease the quantity
+    selectedVariant.quantity -= quantityToPurchase;
+
+    // If the quantity becomes 0, set the variant's status to "soldout"
+    if (selectedVariant.quantity === 0) {
+      selectedVariant.status = "soldout";
+    }
+
+    // Save the updated iPhone
+    const updatediPhone = await iPhone.save();
+
+    ConsoleManager.log(`iPhone purchased: ${JSON.stringify(updatediPhone)}`);
+    return ResponseManager.sendSuccess(res, updatediPhone, 200, 'Purchase successful, quantity updated');
+  } catch (err) {
+    ConsoleManager.error(`Error purchasing iPhone: ${err.message}`);
+    return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error purchasing iPhone: ${err.message}`);
+  }
+});
+
+
 
 module.exports = router;

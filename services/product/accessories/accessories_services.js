@@ -73,6 +73,22 @@ class AccessoryService {
         }
     }
 
+    async getActiveAccessories(query = {}, skip = 0, limit = 20) {
+        try {
+            // Add filter for active status
+            const activeQuery = { ...query, status: 'Active' };  
+    
+            // Fetch active accessories with pagination
+            const accessories = await AccessoryModel.find(activeQuery).skip(skip).limit(limit);
+            consoleManager.log(`Fetched ${accessories.length} active accessories`);
+            return accessories;
+        } catch (err) {
+            consoleManager.error(`Error fetching accessories: ${err.message}`);
+            throw err;
+        }
+    }
+    
+
     async getTotalCount(query={}) {
         try {
             const count = await AccessoryModel.countDocuments(query);
@@ -92,7 +108,7 @@ class AccessoryService {
                 return null;
             }
 
-            const newStatus = accessory.status === "available" ? "soldout" : "available";
+            const newStatus = accessory.status === "Active" ? "Inactive" : "Active";
             accessory.status = newStatus;
             accessory.updatedOn = Date.now();
 

@@ -19,7 +19,7 @@ const authenticateToken = (req, res, next) => {
       consoleManager.error('Invalid token');
       return ResponseManager.handleUnauthorizedError(res, 'Invalid token');
     }
-    req.user = user; // Attach user info to request
+    req.user = user; 
     next();
   });
 };

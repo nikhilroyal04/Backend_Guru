@@ -80,6 +80,21 @@ router.get('/getAllCoupons', async (req, res) => {
     }
 });
 
+router.get('/user/getAllCoupons', async (req, res) => {
+    try {
+        const coupons = await CouponService.getActiveCoupons();
+        if (coupons.length === 0) {
+            return ResponseManager.sendSuccess(res, [], 200, 'No coupons found');
+        }
+
+        return ResponseManager.sendSuccess(res, coupons, 200, 'Coupons retrieved successfully');
+    } catch (err) {
+        consoleManager.error(`Error fetching coupons: ${err.message}`);
+        return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', 'Error fetching coupons');
+    }
+});
+
+
 // Toggle coupon status
 router.put('/removeCoupon/:id', async (req, res) => {
     try {

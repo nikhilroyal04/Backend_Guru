@@ -73,7 +73,6 @@ router.get("/getCategory/:id", async (req, res) => {
 });
 
 // Update a category by ID with optional image upload
-// Update a category by ID with optional image upload
 router.put("/updateCategory/:id", upload.single("categoryImage"), async (req, res) => {
   try {
     const { name, description, status } = req.body;
@@ -98,9 +97,9 @@ router.put("/updateCategory/:id", upload.single("categoryImage"), async (req, re
     }
 
     // If a new image is uploaded, upload it and get the new image URL, otherwise keep the old image URL
-    let imageUrl = existingCategory.categoryImage; // Keep the old image if not updated
+    let imageUrl = existingCategory.categoryImage; 
     if (req.file) {
-      imageUrl = await fileUploaderController.uploadMedia(req.file.buffer); // Upload the new image
+      imageUrl = await fileUploaderController.uploadMedia(req.file.buffer); 
     }
 
     // Update the category with new data, including the (potentially) updated image URL
@@ -108,7 +107,7 @@ router.put("/updateCategory/:id", upload.single("categoryImage"), async (req, re
       name,
       description,
       status,
-      categoryImage: imageUrl, // New or existing image URL
+      categoryImage: imageUrl, 
     });
 
     if (updatedCategory) {
@@ -164,6 +163,44 @@ router.get("/getAllCategories", async (req, res) => {
     return ResponseManager.sendError(res, 500, "INTERNAL_ERROR", "Error fetching categories");
   }
 });
+
+router.get("/user/getAllCategories", async (req, res) => {
+  try {
+    const { name, page = 1, limit = 20 } = req.query;
+
+    // Ensure only active categories are fetched
+    const query = { 
+      status: 'active' 
+    };
+
+    if (name) {
+      query.name = { $regex: new RegExp(name, 'i') };
+    }
+
+    const result = await CategoryService.getActiveCategories(query, page, limit);
+
+    if (!result || result.categories.length === 0) {
+      return ResponseManager.sendSuccess(res, [], 200, "No categories found");
+    }
+
+    // Format the response as needed
+    return ResponseManager.sendSuccess(
+      res,
+      {
+        categories: result.categories,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
+        totalCategories: result.totalCategories,
+      },
+      200,
+      "Categories retrieved successfully"
+    );
+  } catch (err) {
+    consoleManager.error(`Error fetching categories: ${err.message}`);
+    return ResponseManager.sendError(res, 500, "INTERNAL_ERROR", "Error fetching categories");
+  }
+});
+
 
 // Toggle category status
 router.put("/removeCategory/:id", async (req, res) => {

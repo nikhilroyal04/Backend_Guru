@@ -85,6 +85,22 @@ class iPhoneService {
     }
   }  
 
+  async getActiveiPhones(query = {}, skip = 0, limit = 20) {
+    try {
+        // Add filter for active status
+        const activeQuery = { ...query, status: 'Active' };
+
+        // Fetch active iPhones with pagination
+        const iPhones = await iPhoneModel.find(activeQuery).skip(skip).limit(limit);
+        consoleManager.log(`Fetched ${iPhones.length} iPhones`);
+        return iPhones;
+    } catch (err) {
+        consoleManager.error(`Error fetching iPhones: ${err.message}`);
+        throw err;
+    }
+}
+
+
   async getTotalCount(query = {}) {
     try {
       const count = await iPhoneModel.countDocuments(query);
@@ -112,7 +128,7 @@ class iPhoneService {
       });
 
       const newStatus =
-        iPhone.status === "available" ? "soldout" : "available";
+        iPhone.status === "Active" ? "Inactive" : "Active";
       iPhone.status = newStatus;
       iPhone.updatedOn = Date.now();
 

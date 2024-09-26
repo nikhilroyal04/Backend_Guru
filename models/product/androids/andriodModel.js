@@ -1,6 +1,10 @@
 const mongoose = require("mongoose");
 
 const variantSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true, 
+  },
   color: {
     type: String,
     required: true,
@@ -18,6 +22,11 @@ const variantSchema = new mongoose.Schema({
     required: true,
     min: 0,
   },
+  status: {
+    type: String,
+    enum: ["available", "soldout"],
+    default: "available",
+  },
 });
 
 const androidSchema = new mongoose.Schema({
@@ -29,19 +38,19 @@ const androidSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  variants: [variantSchema], // Each Android model has multiple variants
+  variants: [variantSchema], 
   features: {
     type: [String],
     required: true,
   },
   media: {
-    type: [String], // Universal media field for the entire Android model
+    type: [String], 
     required: false,
   },
   status: {
     type: String,
-    enum: ["available", "soldout"],
-    default: "available",
+    enum: ["Active", "Inactive"],
+    default: "Active",
   },
   condition: {
     type: String,

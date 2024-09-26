@@ -67,7 +67,7 @@ class CategoryService {
       // Build the query object for filtering
       const filterQuery = {};
       if (query.name) {
-        filterQuery.name = { $regex: query.name, $options: 'i' }; // Case-insensitive search
+        filterQuery.name = { $regex: query.name, $options: 'i' }; 
       }
   
       // Fetch categories with pagination
@@ -83,6 +83,37 @@ class CategoryService {
         categories, 
         totalPages, 
         currentPage: parseInt(page, 10), 
+        totalCategories
+      };
+    } catch (err) {
+      consoleManager.error(`Error fetching categories: ${err.message}`);
+      throw err;
+    }
+  }
+
+  async getActiveCategories(query = {}, page = 1, limit = 20) {
+    try {
+      // Build the query object for filtering
+      const filterQuery = { status: 'Active' };  
+      
+      // If name query is provided, add partial case-insensitive match
+      if (query.name) {
+        filterQuery.name = { $regex: query.name, $options: 'i' };  
+      }
+  
+      // Fetch categories with pagination
+      const categories = await Category.find(filterQuery)
+        .limit(parseInt(limit, 10))
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10));
+  
+      // Get total number of active categories for pagination
+      const totalCategories = await Category.countDocuments(filterQuery);
+      const totalPages = Math.ceil(totalCategories / limit);
+  
+      return {
+        categories,
+        totalPages,
+        currentPage: parseInt(page, 10),
         totalCategories
       };
     } catch (err) {

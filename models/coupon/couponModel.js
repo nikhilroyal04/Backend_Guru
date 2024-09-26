@@ -54,7 +54,7 @@ const couponSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ["Active", "Inactive"],
-    default: true,
+    default: "Active",
   },
 });
 

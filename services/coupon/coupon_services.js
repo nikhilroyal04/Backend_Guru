@@ -80,6 +80,21 @@ class CouponService {
     }
   }
 
+  //Get Active Coupon
+
+  async getActiveCoupons() {
+    try {
+        // Fetch only active coupons
+        const coupons = await Coupon.find({ status: 'Active' });
+        consoleManager.log(`Fetched ${coupons.length} coupons`);
+        return coupons;
+    } catch (err) {
+        consoleManager.error(`Error fetching coupons: ${err.message}`);
+        throw err;
+    }
+}
+
+
   // Toggle coupon status between Active and Inactive
   async toggleCouponStatus(couponId) {
     try {

@@ -73,6 +73,22 @@ class AndroidService {
         }
     }
 
+    async getActiveAndroids(query = {}, skip = 0, limit = 20) {
+        try {
+            // Add filter for active status
+            const activeQuery = { ...query, status: 'Active' };  
+    
+            // Fetch active Android devices with pagination
+            const androids = await AndroidModel.find(activeQuery).skip(skip).limit(limit);
+            consoleManager.log(`Fetched ${androids.length} Android devices`);
+            return androids;
+        } catch (err) {
+            consoleManager.error(`Error fetching Android devices: ${err.message}`);
+            throw err;
+        }
+    }
+    
+
     async getTotalCount(query = {}) {
         try {
             const count = await AndroidModel.countDocuments(query);
@@ -92,7 +108,7 @@ class AndroidService {
                 return null;
             }
 
-            const newStatus = android.status === "available" ? "soldout" : "available";
+            const newStatus = android.status === "Active" ? "Inactive" : "Active";
             android.status = newStatus;
             android.updatedOn = Date.now();
 

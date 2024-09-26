@@ -68,10 +68,10 @@ class UserService {
       // Build the query object for filtering
       const filterQuery = {};
       if (query.name) {
-        filterQuery.name = { $regex: query.name, $options: 'i' }; // Case-insensitive search
+        filterQuery.name = { $regex: query.name, $options: 'i' }; 
       }
       if (query.email) {
-        filterQuery.email = { $regex: query.email, $options: 'i' }; // Case-insensitive search
+        filterQuery.email = { $regex: query.email, $options: 'i' };
       }
   
       // Fetch users with pagination

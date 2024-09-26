@@ -1,7 +1,10 @@
 const mongoose = require("mongoose");
 
-// Variant Schema to handle different combinations of color, storage, quantity, and battery health
 const variantSchema = new mongoose.Schema({
+  _id: {
+    type: mongoose.Schema.Types.ObjectId,
+    auto: true, 
+  },
   color: {
     type: String,       
     required: true,
@@ -22,6 +25,11 @@ const variantSchema = new mongoose.Schema({
   batteryHealth: {
     type: String,      
     required: true,
+  },
+  status: {
+    type: String,
+    enum: ["available", "soldout"],
+    default: "available",
   },
 });
 
@@ -45,8 +53,8 @@ const iPhoneSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["available", "soldout"],
-    default: "available",
+    enum: ["Active", "Inactive"],
+    default: "Active",
   },
   condition: {
     type: String,

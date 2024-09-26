@@ -92,7 +92,7 @@ router.get('/getAllAndroids', async (req, res) => {
     const query = {};
 
     if (model) {
-      query.model = { $eq: model.toLowerCase() }; 
+      query.model = { $regex: new RegExp(model, 'i') };  
     }
 
     if (repaired) {
@@ -100,7 +100,7 @@ router.get('/getAllAndroids', async (req, res) => {
     }
 
     if (age) {
-      query.age = { $eq: age.toLowerCase() }; 
+      query.age = { $regex: new RegExp(age, 'i') }; 
     }
 
     // Fetch all Androids based on the initial query (without filtering variants yet)
@@ -110,34 +110,117 @@ router.get('/getAllAndroids', async (req, res) => {
       let matchingVariants = android.variants;
 
       // Normalize the Android properties for filtering
-      const normalizedColor = color ? color.toLowerCase() : null;
-      const normalizedStorage = storage ? storage.toLowerCase() : null;
-      const normalizedPrice = price ? price.toString() : null;  // Keep as string
+      const normalizedColor = color ? new RegExp(color, 'i') : null;  
+      const normalizedStorage = storage ? new RegExp(storage, 'i') : null;  
+      const normalizedPrice = price ? new RegExp(price.toString(), 'i') : null;  
 
-      // Filter variants based on color
+      // Filter variants based on color (partial match)
       if (normalizedColor) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.color.toLowerCase() === normalizedColor
+          normalizedColor.test(variant.color)
         );
       }
 
-      // Further filter based on storage
+      // Further filter based on storage (partial match)
       if (normalizedStorage) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.storage.toLowerCase() === normalizedStorage
+          normalizedStorage.test(variant.storage)
         );
       }
 
-      // Filter based on price (string comparison)
+      // Filter based on price (partial match)
       if (normalizedPrice) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.price <= normalizedPrice  // String comparison
+          normalizedPrice.test(variant.price)
         );
       }
 
       // Return Android with only the matching variants
       return { ...android._doc, variants: matchingVariants };
-    }).filter(android => android.variants.length > 0);  // Remove Androids with no matching variants
+    }).filter(android => android.variants.length > 0);  
+
+    // Calculate the total count of Androids based on the filtered results
+    const totalCount = filteredAndroids.length;
+
+    return ResponseManager.sendSuccess(res, {
+      androids: filteredAndroids,
+      totalPages: Math.ceil(totalCount / limitNumber),
+      currentPage: pageNumber,
+      totalCount,
+    }, 200, 'Androids fetched successfully');
+  } catch (err) {
+    ConsoleManager.error(`Error fetching Androids: ${err.message}`);
+    return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error fetching Androids: ${err.message}`);
+  }
+});
+
+// Get active Androids 
+router.get('/user/getAllAndroids', async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 20, 
+      model, 
+      color, 
+      storage, 
+      price, 
+      repaired, 
+      age 
+    } = req.query;
+
+    const pageNumber = parseInt(page, 10);
+    const limitNumber = parseInt(limit, 10);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const query = {};
+
+    if (model) {
+      query.model = { $regex: new RegExp(model, 'i') };  
+    }
+
+    if (repaired) {
+      query.repaired = repaired === 'true' ? 'Yes' : 'No';  
+    }
+
+    if (age) {
+      query.age = { $regex: new RegExp(age, 'i') }; 
+    }
+
+    // Fetch all Androids based on the initial query (without filtering variants yet)
+    const androids = await androidService.getActiveAndroids(query, skip, limitNumber);
+
+    const filteredAndroids = androids.map(android => {
+      let matchingVariants = android.variants;
+
+      // Normalize the Android properties for filtering
+      const normalizedColor = color ? new RegExp(color, 'i') : null;  
+      const normalizedStorage = storage ? new RegExp(storage, 'i') : null;  
+      const normalizedPrice = price ? new RegExp(price.toString(), 'i') : null;  
+
+      // Filter variants based on color (partial match)
+      if (normalizedColor) {
+        matchingVariants = matchingVariants.filter(variant =>
+          normalizedColor.test(variant.color)
+        );
+      }
+
+      // Further filter based on storage (partial match)
+      if (normalizedStorage) {
+        matchingVariants = matchingVariants.filter(variant =>
+          normalizedStorage.test(variant.storage)
+        );
+      }
+
+      // Filter based on price (partial match)
+      if (normalizedPrice) {
+        matchingVariants = matchingVariants.filter(variant =>
+          normalizedPrice.test(variant.price)
+        );
+      }
+
+      // Return Android with only the matching variants
+      return { ...android._doc, variants: matchingVariants };
+    }).filter(android => android.variants.length > 0);  
 
     // Calculate the total count of Androids based on the filtered results
     const totalCount = filteredAndroids.length;
@@ -263,6 +346,51 @@ router.delete('/deleteAndroid/:id', async (req, res) => {
   } catch (err) {
     ConsoleManager.error(`Error deleting Android: ${err.message}`);
     return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error deleting Android: ${err.message}`);
+  }
+});
+
+// Purchase Android and decrease quantity
+router.put('/purchaseAndroid/:id', async (req, res) => {
+  try {
+    const { variantId, quantityToPurchase } = req.body;
+
+    // Validate required fields
+    if (!variantId) return ResponseManager.handleBadRequestError(res, 'Variant ID is required');
+    if (!quantityToPurchase || quantityToPurchase <= 0) return ResponseManager.handleBadRequestError(res, 'Valid quantity to purchase is required');
+
+    // Find the Android by ID
+    const Android = await androidService.getAndroidById(req.params.id);
+    if (!Android) {
+      return ResponseManager.sendSuccess(res, [], 200, 'Android not found');
+    }
+
+    // Find the variant by ID and decrease its quantity
+    const variantIndex = Android.variants.findIndex(variant => variant._id.toString() === variantId);
+    if (variantIndex === -1) {
+      return ResponseManager.handleBadRequestError(res, 'Variant not found');
+    }
+
+    const selectedVariant = Android.variants[variantIndex];
+    if (selectedVariant.quantity < quantityToPurchase) {
+      return ResponseManager.handleBadRequestError(res, 'Not enough stock available');
+    }
+
+    // Decrease the quantity
+    selectedVariant.quantity -= quantityToPurchase;
+
+    // If the quantity becomes 0, set the variant's status to "soldout"
+    if (selectedVariant.quantity === 0) {
+      selectedVariant.status = "soldout";
+    }
+
+    // Save the updated Android
+    const updatedAndroid = await Android.save();
+
+    ConsoleManager.log(`Android purchased: ${JSON.stringify(updatedAndroid)}`);
+    return ResponseManager.sendSuccess(res, updatedAndroid, 200, 'Purchase successful, quantity updated');
+  } catch (err) {
+    ConsoleManager.error(`Error purchasing Android: ${err.message}`);
+    return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error purchasing Android: ${err.message}`);
   }
 });
 
