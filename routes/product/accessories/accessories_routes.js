@@ -47,7 +47,7 @@ router.post('/addAccessory', upload.array('media', 6), async (req, res) => {
         return ResponseManager.handleBadRequestError(res, 'At least one variant is required');
       }
       parsedVariants.forEach(variant => {
-        if (!variant.color || !variant.price || variant.quantity === undefined) {
+        if (!variant.color || !variant.price || !variant.originalPrice || variant.quantity === undefined) {
           throw new Error('Each variant must include color, price, and quantity');
         }
       });
@@ -257,7 +257,7 @@ router.put('/updateAccessory/:id', upload.array('media', 6), async (req, res) =>
         return ResponseManager.handleBadRequestError(res, 'At least one variant is required');
       }
       parsedVariants.forEach(variant => {
-        if (!variant.color || !variant.price || variant.quantity === undefined) {
+        if (!variant.color || !variant.price || !variant.originalPrice || variant.quantity === undefined) {
           throw new Error('Each variant must include color, price, and quantity');
         }
       });

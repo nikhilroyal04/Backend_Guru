@@ -62,6 +62,14 @@ const accessorySchema = new mongoose.Schema({
     enum: ["Active", "Inactive"],
     default: "Active",
   },
+  originalPrice: {
+    type: String,       
+    required: false,
+  },
+  priceOff: {
+    type: String,       
+    required: false,
+  },
   categoryName: {
     type: String,
     required: true,

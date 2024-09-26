@@ -48,7 +48,7 @@ router.post('/addiPhone', upload.array('media', 6), async (req, res) => {
         return ResponseManager.handleBadRequestError(res, 'At least one variant is required');
       }
       parsedVariants.forEach(variant => {
-        if (!variant.color || !variant.storage || !variant.price || variant.quantity === undefined || !variant.batteryHealth) {
+        if (!variant.color || !variant.storage || !variant.price || !variant.originalPrice || variant.quantity === undefined || !variant.batteryHealth ) {
           throw new Error('Each variant must include color, storage, price, quantity, and battery health');
         }
       });
@@ -310,7 +310,7 @@ router.put('/updateiPhone/:id', upload.array('media', 6), async (req, res) => {
         return ResponseManager.handleBadRequestError(res, 'At least one variant is required');
       }
       parsedVariants.forEach(variant => {
-        if (!variant.color || !variant.storage || !variant.price || variant.quantity === undefined || !variant.batteryHealth) {
+        if (!variant.color || !variant.storage || !variant.price || !variant.originalPrice || variant.quantity === undefined || !variant.batteryHealth) {
           throw new Error('Each variant must include color, storage, price, quantity, and battery health');
         }
       });

@@ -1,5 +1,6 @@
 const iPhoneModel = require("../../../models/product/iPhones/iPhoneModel");
 const consoleManager = require("../../../utils/consoleManager");
+const { calculateDiscount } = require("../../../utils/calculateDiscount");
 
 class iPhoneService {
   async createiPhone(data) {
@@ -11,6 +12,17 @@ class iPhoneService {
       if (!data.variants || data.variants.length === 0) {
         throw new Error("At least one variant is required.");
       }
+
+      // Calculate discount for each variant
+      data.variants = data.variants.map((variant) => {
+        if (variant.originalPrice && variant.price) {
+          variant.priceOff = calculateDiscount(
+            variant.originalPrice,
+            variant.price
+          );
+        }
+        return variant;
+      });
 
       const newIPhone = new iPhoneModel(data);
       await newIPhone.save();
@@ -44,9 +56,26 @@ class iPhoneService {
         throw new Error("Variants cannot be empty.");
       }
 
-      const updatedIPhone = await iPhoneModel.findByIdAndUpdate(iPhoneId, data, {
-        new: true,
-      });
+      // Calculate discount for each variant if variants are present
+      if (data.variants) {
+        data.variants = data.variants.map((variant) => {
+          if (variant.originalPrice && variant.price) {
+            variant.priceOff = calculateDiscount(
+              variant.originalPrice,
+              variant.price
+            );
+          }
+          return variant;
+        });
+      }
+
+      const updatedIPhone = await iPhoneModel.findByIdAndUpdate(
+        iPhoneId,
+        data,
+        {
+          new: true,
+        }
+      );
       if (!updatedIPhone) {
         consoleManager.error("iPhone not found for update");
         return null;
@@ -83,23 +112,25 @@ class iPhoneService {
       consoleManager.error(`Error fetching iPhones: ${err.message}`);
       throw err;
     }
-  }  
+  }
 
   async getActiveiPhones(query = {}, skip = 0, limit = 20) {
     try {
-        // Add filter for active status
-        const activeQuery = { ...query, status: 'Active' };
+      // Add filter for active status
+      const activeQuery = { ...query, status: "Active" };
 
-        // Fetch active iPhones with pagination
-        const iPhones = await iPhoneModel.find(activeQuery).skip(skip).limit(limit);
-        consoleManager.log(`Fetched ${iPhones.length} iPhones`);
-        return iPhones;
+      // Fetch active iPhones with pagination
+      const iPhones = await iPhoneModel
+        .find(activeQuery)
+        .skip(skip)
+        .limit(limit);
+      consoleManager.log(`Fetched ${iPhones.length} iPhones`);
+      return iPhones;
     } catch (err) {
-        consoleManager.error(`Error fetching iPhones: ${err.message}`);
-        throw err;
+      consoleManager.error(`Error fetching iPhones: ${err.message}`);
+      throw err;
     }
-}
-
+  }
 
   async getTotalCount(query = {}) {
     try {
@@ -127,8 +158,7 @@ class iPhoneService {
         }
       });
 
-      const newStatus =
-        iPhone.status === "Active" ? "Inactive" : "Active";
+      const newStatus = iPhone.status === "Active" ? "Inactive" : "Active";
       iPhone.status = newStatus;
       iPhone.updatedOn = Date.now();
 

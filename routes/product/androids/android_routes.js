@@ -48,7 +48,7 @@ router.post('/addAndroid', upload.array('media', 6), async (req, res) => {
         return ResponseManager.handleBadRequestError(res, 'At least one variant is required');
       }
       parsedVariants.forEach(variant => {
-        if (!variant.color || !variant.storage || !variant.price || variant.quantity === undefined) {
+        if (!variant.color || !variant.storage || !variant.price || !variant.originalPrice || variant.quantity === undefined) {
           throw new Error('Each variant must include color, storage, price, and quantity');
         }
       });
@@ -291,7 +291,7 @@ router.put('/updateAndroid/:id', upload.array('media', 6), async (req, res) => {
         return ResponseManager.handleBadRequestError(res, 'At least one variant is required');
       }
       parsedVariants.forEach(variant => {
-        if (!variant.color || !variant.storage || !variant.price || variant.quantity === undefined) {
+        if (!variant.color || !variant.storage || !variant.price || !variant.originalPrice || variant.quantity === undefined) {
           throw new Error('Each variant must include color, storage, price, and quantity');
         }
       });

@@ -17,6 +17,14 @@ const variantSchema = new mongoose.Schema({
     type: String,       
     required: true,
   },
+  originalPrice: {
+    type: String,       
+    required: false,
+  },
+  priceOff: {
+    type: String,       
+    required: false,
+  },
   quantity: {
     type: Number,     
     required: true,
