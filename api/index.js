@@ -15,7 +15,17 @@ connectDB().catch((error) => {
 });
 
 // CORS Configuration for credentialed requests
-app.use(cors());
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      // Allow all origins for development
+      callback(null, true);
+    },
+    methods: "GET,POST,PUT,DELETE,OPTIONS",
+    allowedHeaders: "Content-Type,Authorization",
+    credentials: true, // Allow credentials (cookies, HTTP authentication)
+  })
+);
 
 // Middleware
 app.use(express.json());
@@ -50,6 +60,7 @@ app.use((err, req, res, next) => {
   consoleManager.error(`Server error: ${err.stack}`);
   res.status(err.status || 500).send(err.message || "Something went wrong!");
 });
+
 
 // Start the server
 
