@@ -12,14 +12,14 @@ const app = express();
 
 // Enable CORS for cross-origin requests
 
-const corsOptions = {
-  origin: "*", // Adjust according to your needs
-  methods: "GET,POST,PUT,DELETE",
-  allowedHeaders: "Content-Type,Authorization",
-  credentials: true, // Allow credentials such as cookies
-};
+// const corsOptions = {
+//   origin: "*", // Adjust according to your needs
+//   methods: "GET,POST,PUT,DELETE",
+//   allowedHeaders: "Content-Type,Authorization",
+//   credentials: true, // Allow credentials such as cookies
+// };
 
-app.use(cors(corsOptions));
+app.use(cors());
 
 // Enable cookie-parser
 
