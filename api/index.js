@@ -36,16 +36,19 @@ app.use(cookieParser());
 const loginRoute = require("../routes/auth/login");
 const profileRoute = require("../routes/auth/profile");
 const userRoute = require("../routes/user/user_routes");
+const userDataRoute = require("../routes/user/userData_routes");
 const categoryRoute = require("../routes/categories/category_routes");
 const roleRoute = require("../routes/role/role_routes");
 const iPhoneRoute = require("../routes/product/iPhones/iPhone_routes");
 const androidRoute = require("../routes/product/androids/android_routes");
 const accessoryRoute = require("../routes/product/accessories/accessories_routes");
 const couponRoute = require("../routes/coupon/coupon_routes");
+const cartRoute = require("../routes/cart/cart_routes");
 
 app.use("/v2/auth", loginRoute);
 app.use("/v2/get", profileRoute);
 app.use("/v2/user", userRoute);
+app.use("/v2/userData", userDataRoute);
 app.use("/v2/category", categoryRoute);
 app.use("/v2/role", roleRoute);
 
@@ -54,6 +57,7 @@ app.use("/v2/product/android", androidRoute);
 app.use("/v2/product/accessory", accessoryRoute);
 
 app.use("/v2/coupon", couponRoute);
+app.use("/v2/cart", cartRoute);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
