@@ -6,7 +6,7 @@ const consoleManager = require("../../utils/consoleManager");
 
 
 
-router.post("/userData/create/:userId", async (req, res) => {
+router.post("/create/:userId", async (req, res) => {
   try {
     const userId = req.params.userId;
     
