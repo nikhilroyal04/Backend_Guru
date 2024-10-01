@@ -1,16 +1,48 @@
-const UserData = require("../../models/user/userDataModel"); 
-const User = require('../../models/user/userModel'); // Users collection model
+const UserData = require("../../models/user/userDataModel");
+const User = require("../../models/user/userModel"); // Users collection model
 const consoleManager = require("../../utils/consoleManager");
 
 class UserDataService {
-  // Addresses
+
+  async createUserData(userId) {
+    try {
+      // Verify if user exists in Users collection
+      const userExists = await User.findById(userId);
+      if (!userExists) {
+        consoleManager.log("User not found in Users collection");
+        return null; // Or throw an error if preferred
+      }
+
+      // Check if UserData entry exists for the user
+      let userData = await UserData.findOne({ userId });
+      if (userData) {
+        consoleManager.log("UserData already exists for this user");
+        return userData; // UserData already exists, return it
+      }
+
+      // If no UserData entry, create a new one
+      userData = new UserData({
+        userId: userId,
+        addresses: [],
+        orders: [],
+      });
+
+      // Save the new UserData
+      await userData.save();
+      consoleManager.log(`UserData created for user ${userId}`);
+      return userData;
+    } catch (error) {
+      consoleManager.error("Error creating user data:", error);
+      throw error;
+    }
+  }
 
   async addAddress(userId, addressData) {
     try {
       // Verify if user exists in Users collection
       const userExists = await User.findById(userId);
       if (!userExists) {
-        consoleManager.log('User not found in Users collection');
+        consoleManager.log("User not found in Users collection");
         return null;
       }
 
@@ -33,7 +65,7 @@ class UserDataService {
       await userData.save();
       return userData;
     } catch (error) {
-      console.error('Error adding address:', error);
+      console.error("Error adding address:", error);
       throw error;
     }
   }
@@ -45,12 +77,17 @@ class UserDataService {
         throw new Error("User data not found");
       }
 
-      const addressIndex = userData.addresses.findIndex(addr => addr._id.toString() === addressId);
+      const addressIndex = userData.addresses.findIndex(
+        (addr) => addr._id.toString() === addressId
+      );
       if (addressIndex === -1) {
         throw new Error("Address not found");
       }
 
-      userData.addresses[addressIndex] = { ...userData.addresses[addressIndex], ...addressData };
+      userData.addresses[addressIndex] = {
+        ...userData.addresses[addressIndex],
+        ...addressData,
+      };
       userData.updatedOn = Date.now(); // Update timestamp
       await userData.save();
       consoleManager.log("Address updated successfully");
@@ -68,7 +105,9 @@ class UserDataService {
         throw new Error("User data not found");
       }
 
-      userData.addresses = userData.addresses.filter(addr => addr._id.toString() !== addressId);
+      userData.addresses = userData.addresses.filter(
+        (addr) => addr._id.toString() !== addressId
+      );
       userData.updatedOn = Date.now(); // Update timestamp
       await userData.save();
       consoleManager.log("Address deleted successfully");
@@ -105,7 +144,7 @@ class UserDataService {
         userData = new UserData({
           userId: userId,
           addresses: [], // Initialize addresses as empty
-          orders: [],    // Initialize orders as empty
+          orders: [], // Initialize orders as empty
         });
         consoleManager.log(`New UserData created for user ${userId}`);
       }
@@ -143,17 +182,19 @@ class UserDataService {
       if (!userData) {
         throw new Error("User data not found");
       }
-  
+
       // Find the order by its ID
-      const orderIndex = userData.orders.findIndex(order => order._id.toString() === orderId);
+      const orderIndex = userData.orders.findIndex(
+        (order) => order._id.toString() === orderId
+      );
       if (orderIndex === -1) {
         throw new Error("Order not found");
       }
-  
+
       // Update only the order status
       userData.orders[orderIndex].orderStatus = orderStatus; // Update order status
       userData.orders[orderIndex].updatedOn = Date.now(); // Update timestamp
-  
+
       await userData.save();
       consoleManager.log("Order status updated successfully");
       return userData;
@@ -162,8 +203,6 @@ class UserDataService {
       throw err;
     }
   }
-  
-  
 
   async deleteOrder(userId, orderId) {
     try {
@@ -173,12 +212,14 @@ class UserDataService {
       }
 
       // Check if the order exists by its ID
-      const orderIndex = userData.orders.findIndex(order => order._id.toString() === orderId);
+      const orderIndex = userData.orders.findIndex(
+        (order) => order._id.toString() === orderId
+      );
       if (orderIndex === -1) {
         throw new Error("Order not found");
       }
 
-      userData.orders.splice(orderIndex, 1); 
+      userData.orders.splice(orderIndex, 1);
       userData.updatedOn = Date.now(); // Update timestamp
       await userData.save();
       consoleManager.log("Order deleted successfully");
@@ -224,7 +265,9 @@ class UserDataService {
       }
       return userData;
     } catch (err) {
-      consoleManager.error(`Error fetching user data by user ID: ${err.message}`);
+      consoleManager.error(
+        `Error fetching user data by user ID: ${err.message}`
+      );
       throw err;
     }
   }

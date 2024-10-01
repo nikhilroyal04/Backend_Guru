@@ -5,6 +5,26 @@ const ResponseManager = require("../../utils/responseManager");
 const consoleManager = require("../../utils/consoleManager");
 
 
+
+router.post("/userData/create/:userId", async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    
+    // Call the createUserData service method
+    const userData = await userDataService.createUserData(userId);
+    
+    if (userData) {
+      ResponseManager.sendSuccess(res, userData, 201, "User data created successfully");
+    } else {
+      ResponseManager.sendSuccess(res, null, 404, "User not found, UserData not created");
+    }
+  } catch (err) {
+    consoleManager.error(`Error creating user data: ${err.message}`);
+    ResponseManager.sendError(res, 500, "INTERNAL_ERROR", "Error creating user data");
+  }
+});
+
+
 // Add Address for a user
 router.post("/addresses/addAddress/:userId", async (req, res) => {
   try {
