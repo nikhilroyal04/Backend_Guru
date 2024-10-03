@@ -3,35 +3,35 @@ const mongoose = require("mongoose");
 const variantSchema = new mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
-    auto: true, 
+    auto: true,
   },
   color: {
-    type: [String],       
+    type: String,
     required: true,
   },
   storage: {
-    type: [String],      
+    type: String,
     required: true,
   },
   price: {
-    type: [String],       
+    type: String,
     required: true,
   },
   originalPrice: {
-    type: [String],       
+    type: String,
     required: false,
   },
   priceOff: {
-    type: [String],       
+    type: String,
     required: false,
   },
   quantity: {
-    type: [Number],     
+    type: Number,
     required: true,
     min: 0,
   },
   batteryHealth: {
-    type: [String],      
+    type: String,
     required: true,
   },
   status: {
@@ -44,19 +44,19 @@ const variantSchema = new mongoose.Schema({
 const iPhoneSchema = new mongoose.Schema({
   model: {
     type: String,
-    required: true,    
-  },
-  releaseYear: {
-    type: String,      
     required: true,
   },
-  variants: [variantSchema],  
+  releaseYear: {
+    type: String,
+    required: true,
+  },
+  variants: [variantSchema],
   media: {
-    type: [String],     
+    type: [String],
     required: false,
   },
   features: {
-    type: [String],      
+    type: [String],
     required: true,
   },
   status: {
@@ -70,33 +70,33 @@ const iPhoneSchema = new mongoose.Schema({
     required: true,
   },
   warranty: {
-    type: String,        
-    default: "false",    
+    type: String,
+    default: "false",
   },
   addOn: {
-    type: [String],       
+    type: [String],
   },
   purchaseDate: {
-    type: String,         
+    type: String,
   },
   age: {
-    type: String,         
+    type: String,
     required: true,
   },
   repaired: {
-    type: String,        
-    default: "false",     
+    type: String,
+    default: "false",
   },
   categoryName: {
-    type: String,         
+    type: String,
     required: true,
   },
   createdOn: {
-    type: String,         
+    type: String,
     required: false,
   },
   updatedOn: {
-    type: String,         
+    type: String,
     required: false,
   },
 });
