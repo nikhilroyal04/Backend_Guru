@@ -6,32 +6,32 @@ const variantSchema = new mongoose.Schema({
     auto: true, 
   },
   color: {
-    type: String,       
+    type: [String],       
     required: true,
   },
   storage: {
-    type: String,      
+    type: [String],      
     required: true,
   },
   price: {
-    type: String,       
+    type: [String],       
     required: true,
   },
   originalPrice: {
-    type: String,       
+    type: [String],       
     required: false,
   },
   priceOff: {
-    type: String,       
+    type: [String],       
     required: false,
   },
   quantity: {
-    type: Number,     
+    type: [Number],     
     required: true,
     min: 0,
   },
   batteryHealth: {
-    type: String,      
+    type: [String],      
     required: true,
   },
   status: {
