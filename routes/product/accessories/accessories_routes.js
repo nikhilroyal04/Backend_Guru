@@ -14,7 +14,7 @@ const upload = multer({ storage: storage, limits: { files: 6 } });
 router.post('/addAccessory', upload.array('media', 6), async (req, res) => {
   try {
     const {
-      name, type, warranty, compatibility, condition,
+      name, type, warranty, features, compatibility, releaseYear, condition,
       purchaseDate, categoryName, variants
     } = req.body;
 
@@ -57,7 +57,7 @@ router.post('/addAccessory', upload.array('media', 6), async (req, res) => {
 
     // Create a new accessory listing
     const accessoryData = await accessoryService.createAccessory({
-      name, type, media: mediaUrls, warranty, compatibility, condition,
+      name, type, media: mediaUrls, warranty, features, releaseYear, compatibility, condition,
       purchaseDate, categoryName, variants: parsedVariants
     });
 
@@ -181,11 +181,29 @@ router.get('/user/getAllAccessories', async (req, res) => {
     const accessories = await accessoryService.getActiveAccessories(query, skip, limitNumber);
 
     const filteredAccessories = accessories.map(accessory => {
-      const matchingVariants = accessory.variants.filter(variant => {
-        const matchesColor = color ? variant.color.toLowerCase().includes(color.toLowerCase()) : true; 
-        const matchesPrice = price ? variant.price <= price : true; 
-        return matchesColor && matchesPrice;
-      });
+      let matchingVariants = accessory.variants;
+
+      // Normalize the price range
+      let priceRange = null;
+      if (price) {
+        const priceRangeSplit = price.split('-').map(Number);
+        priceRange = { min: priceRangeSplit[0], max: priceRangeSplit[1] };
+      }
+
+      // Filter variants based on color and price range
+      if (color) {
+        matchingVariants = matchingVariants.filter(variant =>
+          variant.color.toLowerCase().includes(color.toLowerCase())
+        );
+      }
+
+      if (priceRange) {
+        matchingVariants = matchingVariants.filter(variant =>
+          variant.price >= priceRange.min && variant.price <= priceRange.max
+        );
+      }
+
+      // Return accessory with only the matching variants
       return { ...accessory._doc, variants: matchingVariants };
     }).filter(accessory => accessory.variants.length > 0); 
 

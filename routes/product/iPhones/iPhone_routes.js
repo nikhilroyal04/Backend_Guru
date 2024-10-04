@@ -193,8 +193,13 @@ router.get('/user/getAlliPhones', async (req, res) => {
       query.repaired = repaired === 'true' ? 'Yes' : 'No'; 
     }
 
+    // Handle age filtering (e.g., "less than 6 months")
     if (age) {
-      query.age = { $regex: new RegExp(age, 'i') };  
+      const ageInMonthsThreshold = parseInt(age, 10); // Get the numeric value of the age threshold
+      if (!isNaN(ageInMonthsThreshold)) {
+        // We will fetch all iPhones and filter the ones with age < ageInMonthsThreshold
+        query.age = { $exists: true }; // Ensure age is present in the query
+      }
     }
 
     // Fetch the iPhones based on the initial query (without filtering variants yet)
@@ -205,53 +210,73 @@ router.get('/user/getAlliPhones', async (req, res) => {
 
       // Normalize the iPhone properties for filtering
       const normalizedColor = color ? color.toLowerCase() : null;
-      const normalizedStorage = storage ? storage.toLowerCase() : null;
-      const normalizedPrice = price ? price.toString() : null;  
-      const normalizedBatteryHealth = batteryHealth ? batteryHealth.toLowerCase() : null;  
+      const normalizedStorage = storage ? storage.split(',').map(s => s.trim().toLowerCase()) : null;
+      let priceRange = null;
+      if (price) {
+        const priceRangeSplit = price.split('-').map(Number);
+        priceRange = { min: priceRangeSplit[0], max: priceRangeSplit[1] };
+      }
 
-      // Filter variants based on partial, case-insensitive match for color
+      // Handle battery health range (e.g., 80-85%)
+      let batteryHealthRange = null;
+      if (batteryHealth) {
+        const batteryHealthSplit = batteryHealth.split('-').map(Number);
+        batteryHealthRange = { min: batteryHealthSplit[0], max: batteryHealthSplit[1] };
+      }
+
+      // Filter variants based on color, storage, price, and battery health
       if (normalizedColor) {
         matchingVariants = matchingVariants.filter(variant =>
           new RegExp(normalizedColor, 'i').test(variant.color)
         );
       }
 
-      // Further filter based on partial, case-insensitive match for storage
       if (normalizedStorage) {
         matchingVariants = matchingVariants.filter(variant =>
-          new RegExp(normalizedStorage, 'i').test(variant.storage)
+          normalizedStorage.includes(variant.storage.toLowerCase())
         );
       }
 
-      // Filter based on price (string comparison)
-      if (normalizedPrice) {
+      if (priceRange) {
         matchingVariants = matchingVariants.filter(variant =>
-          variant.price <= normalizedPrice  
+          variant.price >= priceRange.min && variant.price <= priceRange.max
         );
       }
 
-      // Filter based on battery health (partial, case-insensitive match)
-      if (normalizedBatteryHealth) {
-        matchingVariants = matchingVariants.filter(variant =>
-          new RegExp(normalizedBatteryHealth, 'i').test(variant.batteryHealth)
-        );
+      if (batteryHealthRange) {
+        matchingVariants = matchingVariants.filter(variant => {
+          const batteryHealthValue = parseInt(variant.batteryHealth.replace('%', ''), 10); // Remove "%" and convert to number
+          return batteryHealthValue >= batteryHealthRange.min && batteryHealthValue <= batteryHealthRange.max;
+        });
       }
 
-      // Return iPhone with only the matching variants
       return { ...iPhone._doc, variants: matchingVariants };
     }).filter(iPhone => iPhone.variants.length > 0); 
 
+    // Now filter iPhones by age (less than the provided threshold)
+    let finalFilteredIPhones = filteredIPhones;
+
+    if (age) {
+      const ageInMonthsThreshold = parseInt(age, 10);
+      if (!isNaN(ageInMonthsThreshold)) {
+        finalFilteredIPhones = filteredIPhones.filter(iPhone => {
+          const iPhoneAge = iPhone.age && parseInt(iPhone.age.split(' ')[0], 10); // Extract the number part of the age (e.g., "6 months" => 6)
+          return iPhoneAge && iPhoneAge < ageInMonthsThreshold; // Keep only iPhones with age less than the given threshold
+        });
+      }
+    }
+
     // Calculate the total count of iPhones based on the filtered results
-    const totalCount = filteredIPhones.length;
+    const totalCount = finalFilteredIPhones.length;
 
     return ResponseManager.sendSuccess(res, {
-      iPhones: filteredIPhones,
+      iPhones: finalFilteredIPhones,
       totalPages: Math.ceil(totalCount / limitNumber),
       currentPage: pageNumber,
       totalCount,
     }, 200, 'iPhones fetched successfully');
   } catch (err) {
-    ConsoleManager.error(`Error fetching iPhones: ${err.message}`);
+    consoleManager.error(`Error fetching iPhones: ${err.message}`);
     return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', `Error fetching iPhones: ${err.message}`);
   }
 });

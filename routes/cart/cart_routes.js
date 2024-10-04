@@ -107,6 +107,29 @@ router.delete('/removeItem/:userId/:productId/:variantId', async (req, res) => {
 });
 
 
+// Update the quantity of a cart item
+router.put('/updateItemQuantity/:userId/:productId/:variantId', async (req, res) => {
+    try {
+        const { userId, productId, variantId } = req.params;
+        const { quantity } = req.body;
+
+        if (!quantity || quantity < 0) {
+            return ResponseManager.handleBadRequestError(res, 'Invalid quantity');
+        }
+
+        const cart = await CartService.updateItemQuantity(userId, productId, variantId, quantity);
+        
+        if (cart) {
+            return ResponseManager.sendSuccess(res, cart, 200, 'Item quantity updated successfully');
+        } else {
+            return ResponseManager.sendSuccess(res, [], 200, 'Cart or item not found for quantity update');
+        }
+    } catch (err) {
+        consoleManager.error('Error updating item quantity:', err);
+        return ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', 'Error updating item quantity');
+    }
+});
+
 
 // Get all items in the cart
 router.get('/getCartItems/:userId', async (req, res) => {

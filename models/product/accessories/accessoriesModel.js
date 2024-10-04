@@ -47,6 +47,10 @@ const accessorySchema = new mongoose.Schema({
     enum: ["charger", "case", "earbuds", "screen protector", "other"],
     required: true,
   },
+  releaseYear: {
+    type: String,
+    required: true,
+  },
   compatibility: {
     type: String,
     required: true,
@@ -64,6 +68,10 @@ const accessorySchema = new mongoose.Schema({
   warranty: {
     type: String,
     default: "false",
+  },
+  features: {
+    type: [String],
+    required: true,
   },
   status: {
     type: String,

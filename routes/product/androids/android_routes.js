@@ -182,51 +182,68 @@ router.get('/user/getAllAndroids', async (req, res) => {
       query.repaired = repaired === 'true' ? 'Yes' : 'No';  
     }
 
+    // Handle age filtering (e.g., less than 6 months)
     if (age) {
-      query.age = { $regex: new RegExp(age, 'i') }; 
+      const ageInMonthsThreshold = parseInt(age, 10);
+      if (!isNaN(ageInMonthsThreshold)) {
+        query.age = { $exists: true };  // Fetch Androids that have an age field
+      }
     }
 
-    // Fetch all Androids based on the initial query (without filtering variants yet)
+    // Fetch Androids based on initial query
     const androids = await androidService.getActiveAndroids(query, skip, limitNumber);
 
     const filteredAndroids = androids.map(android => {
       let matchingVariants = android.variants;
 
-      // Normalize the Android properties for filtering
-      const normalizedColor = color ? new RegExp(color, 'i') : null;  
-      const normalizedStorage = storage ? new RegExp(storage, 'i') : null;  
-      const normalizedPrice = price ? new RegExp(price.toString(), 'i') : null;  
+      // Normalize filtering options
+      const normalizedColor = color ? color.toLowerCase() : null;
+      const normalizedStorage = storage ? storage.split(',').map(s => s.trim().toLowerCase()) : null;
+      let priceRange = null;
+      if (price) {
+        const priceRangeSplit = price.split('-').map(Number);
+        priceRange = { min: priceRangeSplit[0], max: priceRangeSplit[1] };
+      }
 
-      // Filter variants based on color (partial match)
+      // Filter variants based on color, storage, price
       if (normalizedColor) {
         matchingVariants = matchingVariants.filter(variant =>
-          normalizedColor.test(variant.color)
+          new RegExp(normalizedColor, 'i').test(variant.color)
         );
       }
 
-      // Further filter based on storage (partial match)
       if (normalizedStorage) {
         matchingVariants = matchingVariants.filter(variant =>
-          normalizedStorage.test(variant.storage)
+          normalizedStorage.includes(variant.storage.toLowerCase())
         );
       }
 
-      // Filter based on price (partial match)
-      if (normalizedPrice) {
+      if (priceRange) {
         matchingVariants = matchingVariants.filter(variant =>
-          normalizedPrice.test(variant.price)
+          variant.price >= priceRange.min && variant.price <= priceRange.max
         );
       }
 
-      // Return Android with only the matching variants
       return { ...android._doc, variants: matchingVariants };
     }).filter(android => android.variants.length > 0);  
 
+    // Now filter Androids by age (less than the provided threshold)
+    let finalFilteredAndroids = filteredAndroids;
+    if (age) {
+      const ageInMonthsThreshold = parseInt(age, 10);
+      if (!isNaN(ageInMonthsThreshold)) {
+        finalFilteredAndroids = filteredAndroids.filter(android => {
+          const androidAge = android.age && parseInt(android.age.split(' ')[0], 10); // Extract the number part of the age
+          return androidAge && androidAge < ageInMonthsThreshold; // Keep Androids less than the age threshold
+        });
+      }
+    }
+
     // Calculate the total count of Androids based on the filtered results
-    const totalCount = filteredAndroids.length;
+    const totalCount = finalFilteredAndroids.length;
 
     return ResponseManager.sendSuccess(res, {
-      androids: filteredAndroids,
+      androids: finalFilteredAndroids,
       totalPages: Math.ceil(totalCount / limitNumber),
       currentPage: pageNumber,
       totalCount,

@@ -129,6 +129,52 @@ class CartService {
     }
 }
 
+  // Update the quantity of an item in the cart
+  async updateItemQuantity(userId, productId, variantId, quantity) {
+    try {
+      const cart = await Cart.findOne({ userId: userId });
+      if (!cart) {
+        consoleManager.error("Cart not found");
+        return null;
+      }
+
+      // Find the item based on both productId and variantId
+      const item = cart.items.find(
+        (item) => 
+          item.productId.toString() === productId && 
+          item.variantId.toString() === variantId
+      );
+
+      if (!item) {
+        consoleManager.error("Item not found in the cart");
+        return null;
+      }
+
+      // Update the quantity of the item
+      if (quantity <= 0) {
+        // If quantity is 0 or less, remove the item from the cart
+        cart.items = cart.items.filter(
+          (item) => 
+            item.productId.toString() !== productId || 
+            item.variantId.toString() !== variantId
+        );
+        consoleManager.log("Item removed from cart due to zero quantity");
+      } else {
+        // Update the item quantity
+        item.quantity = quantity;
+        consoleManager.log("Item quantity updated successfully");
+      }
+
+      cart.updatedOn = Date.now();
+      await cart.save();
+
+      return cart;
+    } catch (err) {
+      consoleManager.error(`Error updating item quantity: ${err.message}`);
+      throw err;
+    }
+  }
+
 
   // Get all items in the cart
   async getCartItems(userId) {
