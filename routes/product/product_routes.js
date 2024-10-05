@@ -143,15 +143,24 @@ router.get('/getAllProducts', async (req, res) => {
 });
 
 // Get all available products with pagination
+// Get all available products with pagination and optional category filter
 router.get('/available/getAllProducts', async (req, res) => {
   try {
-    const { page = 1, limit = 20 } = req.query;
+    const { page = 1, limit = 20, categoryName } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
     const skip = (pageNumber - 1) * limitNumber;
 
-    const products = await productService.getAllAvailableProducts({}, skip, limitNumber);
+    const query = {}; // Initialize an empty query
+
+    // Add categoryName to the query if it exists
+    if (categoryName) {
+      query.categoryName = categoryName;
+    }
+
+    // Fetch products based on the query
+    const products = await productService.getAllAvailableProducts(query, skip, limitNumber);
 
     return ResponseManager.sendSuccess(res, {
       products,
