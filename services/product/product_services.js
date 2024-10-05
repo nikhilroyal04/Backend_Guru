@@ -140,9 +140,9 @@ class ProductService {
   }
 
   // Get the total number of products
-  async getNumberOfProducts() {
+  async getNumberOfProducts(query) {
     try {
-      const count = await Product.countDocuments();
+      const count = await Product.countDocuments(query);
       consoleManager.log(`Number of products: ${count}`);
       return count;
     } catch (err) {

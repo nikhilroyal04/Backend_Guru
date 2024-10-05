@@ -117,18 +117,71 @@ router.delete('/deleteProduct/:id', async (req, res) => {
 // Get all products with pagination
 router.get('/getAllProducts', async (req, res) => {
   try {
-    const { page = 1, limit = 20, categoryName } = req.query;
+    const { page = 1, limit = 20, categoryName, model, price, batteryHealth, storage, age } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
     const skip = (pageNumber - 1) * limitNumber;
 
     const query = {};
-    if (categoryName) query.categoryName = categoryName;
+    if (categoryName) {
+      query.categoryName = { 
+        $regex: new RegExp(categoryName, 'i') 
+      };
+    }
+
+        // Filter by model (case insensitive like search)
+    if (model) {
+      query.model = {
+        $regex: new RegExp(model, 'i') 
+      };
+    }
+
+     // Filter by price range (min-max)
+    if (price) {
+      const [minPrice, maxPrice] = price.split('-').map(Number);
+      if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+        query.price = {
+          $gte: minPrice,
+          $lte: maxPrice
+        };
+      }
+    }
+
+    // Filter by battery health range (min-max)
+    if (batteryHealth) {
+      const [minBatteryHealth, maxBatteryHealth] = batteryHealth.split('-').map(Number);
+      if (!isNaN(minBatteryHealth) && !isNaN(maxBatteryHealth)) {
+        query.batteryHealth = {
+          $gte: minBatteryHealth,
+          $lte: maxBatteryHealth
+        };
+      }
+    }
+
+     // Filter by multiple storage options
+    if (storage) {
+      const storageOptions = storage.split(',').map(option => option.trim());
+      query.storage = {
+        $in: storageOptions.map(option => new RegExp(option, 'i')) // Case insensitive search for each storage option
+      };
+    }
+
+    // Filter by age (maximum age in months)
+    if (age) {
+      const ageValue = parseInt(age.trim().split(' ')[0], 10); // Extract the numeric part, allowing for optional space
+      if (!isNaN(ageValue)) {
+        // Adjust the query to find products less than or equal to the specified age
+        query.age = {
+          $lte: ageValue // Match products that are less than or equal to the specified age
+        };
+      }
+    }
+
 
     const products = await productService.getAllProducts(query, skip, limitNumber);
 
-    const totalCount = await productService.getNumberOfProducts();
+    const totalCount = await productService.getNumberOfProducts(query);
 
     return ResponseManager.sendSuccess(res, {
       products,
@@ -142,11 +195,10 @@ router.get('/getAllProducts', async (req, res) => {
   }
 });
 
-// Get all available products with pagination
 // Get all available products with pagination and optional category filter
 router.get('/available/getAllProducts', async (req, res) => {
   try {
-    const { page = 1, limit = 20, categoryName } = req.query;
+    const { page = 1, limit = 20, categoryName, model, price, batteryHealth, storage, age } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -156,7 +208,57 @@ router.get('/available/getAllProducts', async (req, res) => {
 
     // Add categoryName to the query if it exists
     if (categoryName) {
-      query.categoryName = categoryName;
+      query.categoryName = { 
+        $regex: new RegExp(categoryName, 'i') 
+      };
+    }
+
+    // Filter by model (case insensitive like search)
+    if (model) {
+      query.model = {
+        $regex: new RegExp(model, 'i') 
+      };
+    }
+
+     // Filter by price range (min-max)
+    if (price) {
+      const [minPrice, maxPrice] = price.split('-').map(Number);
+      if (!isNaN(minPrice) && !isNaN(maxPrice)) {
+        query.price = {
+          $gte: minPrice,
+          $lte: maxPrice
+        };
+      }
+    }
+
+    // Filter by battery health range (min-max)
+    if (batteryHealth) {
+      const [minBatteryHealth, maxBatteryHealth] = batteryHealth.split('-').map(Number);
+      if (!isNaN(minBatteryHealth) && !isNaN(maxBatteryHealth)) {
+        query.batteryHealth = {
+          $gte: minBatteryHealth,
+          $lte: maxBatteryHealth
+        };
+      }
+    }
+
+     // Filter by multiple storage options
+    if (storage) {
+      const storageOptions = storage.split(',').map(option => option.trim());
+      query.storage = {
+        $in: storageOptions.map(option => new RegExp(option, 'i')) // Case insensitive search for each storage option
+      };
+    }
+
+    // Filter by age (maximum age in months)
+    if (age) {
+      const ageValue = parseInt(age.trim().split(' ')[0], 10); // Extract the numeric part, allowing for optional space
+      if (!isNaN(ageValue)) {
+        // Adjust the query to find products less than or equal to the specified age
+        query.age = {
+          $lte: ageValue // Match products that are less than or equal to the specified age
+        };
+      }
     }
 
     // Fetch products based on the query
