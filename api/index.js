@@ -39,11 +39,10 @@ const userRoute = require("../routes/user/user_routes");
 const userDataRoute = require("../routes/user/userData_routes");
 const categoryRoute = require("../routes/categories/category_routes");
 const roleRoute = require("../routes/role/role_routes");
-const iPhoneRoute = require("../routes/product/iPhones/iPhone_routes");
-const androidRoute = require("../routes/product/androids/android_routes");
-const accessoryRoute = require("../routes/product/accessories/accessories_routes");
+
 const couponRoute = require("../routes/coupon/coupon_routes");
 const cartRoute = require("../routes/cart/cart_routes");
+const productRoute = require("../routes/product/product_routes");
 
 app.use("/v2/auth", loginRoute);
 app.use("/v2/get", profileRoute);
@@ -52,9 +51,7 @@ app.use("/v2/userData", userDataRoute);
 app.use("/v2/category", categoryRoute);
 app.use("/v2/role", roleRoute);
 
-app.use("/v2/product/iphone", iPhoneRoute);
-app.use("/v2/product/android", androidRoute);
-app.use("/v2/product/accessory", accessoryRoute);
+app.use("/v2/product", productRoute);
 
 app.use("/v2/coupon", couponRoute);
 app.use("/v2/cart", cartRoute);
@@ -64,7 +61,6 @@ app.use((err, req, res, next) => {
   consoleManager.error(`Server error: ${err.stack}`);
   res.status(err.status || 500).send(err.message || "Something went wrong!");
 });
-
 
 // Start the server
 

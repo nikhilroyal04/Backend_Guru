@@ -12,7 +12,7 @@ function calculateDiscount(originalPrice, salePrice) {
     const discountPercentage = ((original - sale) / original) * 100;
   
     // Return the rounded percentage value
-    return `${Math.round(discountPercentage)}%`;
+    return `${Math.round(discountPercentage)}`;
   }
   
   module.exports = { calculateDiscount };
