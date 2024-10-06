@@ -178,6 +178,14 @@ router.get('/getAllProducts', async (req, res) => {
       }
     }
 
+    // Filter by multiple type options
+    if (type) {
+      const typeOptions = type.split(',').map(option => option.trim());
+      query.type = {
+        $in: typeOptions.map(option => new RegExp(option, 'i')) // Case insensitive search for each type option
+      };
+    }
+
 
     const products = await productService.getAllProducts(query, skip, limitNumber);
 
@@ -259,6 +267,14 @@ router.get('/available/getAllProducts', async (req, res) => {
           $lte: ageValue // Match products that are less than or equal to the specified age
         };
       }
+    }
+
+     // Filter by multiple type options
+    if (type) {
+      const typeOptions = type.split(',').map(option => option.trim());
+      query.type = {
+        $in: typeOptions.map(option => new RegExp(option, 'i')) // Case insensitive search for each type option
+      };
     }
 
     // Fetch products based on the query
