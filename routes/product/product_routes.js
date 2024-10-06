@@ -117,7 +117,7 @@ router.delete('/deleteProduct/:id', async (req, res) => {
 // Get all products with pagination
 router.get('/getAllProducts', async (req, res) => {
   try {
-    const { page = 1, limit = 20, categoryName, model, price, batteryHealth, storage, age } = req.query;
+    const { page = 1, limit = 20, categoryName, model, price, batteryHealth, storage, age, type } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
@@ -206,7 +206,7 @@ router.get('/getAllProducts', async (req, res) => {
 // Get all available products with pagination and optional category filter
 router.get('/available/getAllProducts', async (req, res) => {
   try {
-    const { page = 1, limit = 20, categoryName, model, price, batteryHealth, storage, age } = req.query;
+    const { page = 1, limit = 20, categoryName, model, price, batteryHealth, storage, age, type } = req.query;
 
     const pageNumber = parseInt(page, 10);
     const limitNumber = parseInt(limit, 10);
