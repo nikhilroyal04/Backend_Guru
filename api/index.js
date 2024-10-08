@@ -14,7 +14,7 @@ connectDB().catch((error) => {
   process.exit(1);
 });
 
-const allowedOrigins = ['http://localhost:5173/', 'https://guruiphone.vercel.app/'];
+const allowedOrigins = ['http://localhost:5173', 'https://guruiphone.vercel.app'];
 
 // CORS Configuration for credentialed requests
 app.use(
