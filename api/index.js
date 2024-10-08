@@ -14,21 +14,16 @@ connectDB().catch((error) => {
   process.exit(1);
 });
 
-const allowedOrigins = ['http://localhost:5173', 'https://guruiphone.vercel.app'];
-
 // CORS Configuration for credentialed requests
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      // Allow all origins for development
+      callback(null, true);
     },
     methods: "GET,POST,PUT,DELETE,OPTIONS",
     allowedHeaders: "Content-Type,Authorization",
-    credentials: true,
+    credentials: true, // Allow credentials (cookies, HTTP authentication)
   })
 );
 
