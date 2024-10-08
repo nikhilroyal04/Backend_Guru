@@ -5,7 +5,7 @@ class CookieManager {
     let cookieOptions = {
       httpOnly: true,
       sameSite: 'None',
-      secure: true,
+      secure: false,
       maxAge: 7 * 24 * 60 * 60 * 1000,
       ...options,
     };
