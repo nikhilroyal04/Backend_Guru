@@ -10,7 +10,7 @@ const router = express.Router();
 // Middleware to verify JWT token from cookies
 const authenticateToken = (req, res, next) => {
   // Get token from cookies
-  const token = CookieManager.getCookie(req, 'authToken');
+  const token = CookieManager.getCookie(req, 'authToken') || localStorage.setItem('authToken', token);
 
   if (token == null) return ResponseManager.handleUnauthorizedError(res, 'No token provided');
 
