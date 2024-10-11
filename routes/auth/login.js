@@ -19,7 +19,7 @@ router.post('/login', async (req, res) => {
     const token = await LoginService.loginUser(email, password);
 
     // Set the JWT token in a cookie
-    CookieManager.setCookie(res, 'authToken', token);
+    CookieManager.setCookie(res, 'authToken', token, { httpOnly: true, maxAge: 7 * 24 * 60 * 60 * 1000 }); // 1 week
 
     // Send success response with token only
     ResponseManager.sendSuccess(res, { token }, 200, 'Login successful');
