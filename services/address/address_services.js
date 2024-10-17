@@ -83,6 +83,9 @@ class AddressService {
       // Build the query object for filtering (e.g., by city or state)
       const filterQuery = {};  // Initialize filter query
   
+      if (query.name) {
+        filterQuery.name = { $regex: query.name, $options: "i" }; // Case-insensitive search for city
+      }
       if (query.city) {
         filterQuery.city = { $regex: query.city, $options: "i" }; // Case-insensitive search for city
       }

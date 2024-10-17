@@ -99,8 +99,8 @@ router.delete('/deleteAddress/:addressId', async (req, res) => {
 // Get all addresses with pagination and filtering by city/state for a user
 router.get('/getAllAddresses', async (req, res) => {
   try {
-    const { city, state, page = 1, limit = 20 } = req.query;
-    const result = await AddressService.getAllAddresses({ city, state }, page, limit);
+    const {name, city, state, page = 1, limit = 20 } = req.query;
+    const result = await AddressService.getAllAddresses({ name, city, state }, page, limit);
 
     if (result.addresses.length === 0) {
       return ResponseManager.sendSuccess(res, [], 200, 'No addresses found');
