@@ -36,9 +36,11 @@ app.use(cookieParser());
 const loginRoute = require("../routes/auth/login");
 const profileRoute = require("../routes/auth/profile");
 const userRoute = require("../routes/user/user_routes");
-const userDataRoute = require("../routes/user/userData_routes");
+const orderRoutes = require("../routes/orders/order_routes");
+const addressRoutes = require("../routes/address/address_routes");
 const categoryRoute = require("../routes/categories/category_routes");
 const roleRoute = require("../routes/role/role_routes");
+const featureRoutes = require("../routes/features/feature_routes");
 
 const couponRoute = require("../routes/coupon/coupon_routes");
 const cartRoute = require("../routes/cart/cart_routes");
@@ -47,9 +49,11 @@ const productRoute = require("../routes/product/product_routes");
 app.use("/v2/auth", loginRoute);
 app.use("/v2/get", profileRoute);
 app.use("/v2/user", userRoute);
-app.use("/v2/userData", userDataRoute);
+app.use("/v2/user/order", orderRoutes);
+app.use("/v2/user/address", addressRoutes);
 app.use("/v2/category", categoryRoute);
 app.use("/v2/role", roleRoute);
+app.use("/v2/feature", featureRoutes);
 
 app.use("/v2/product", productRoute);
 

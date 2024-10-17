@@ -1,6 +1,5 @@
 const mongoose = require("mongoose");
 
-// Address Schema
 const addressSchema = new mongoose.Schema({
   name: {
     type: String,
@@ -13,7 +12,7 @@ const addressSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/, // Simple email validation regex
+    match: /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/,
   },
   addressLine1: {
     type: String,
@@ -30,7 +29,7 @@ const addressSchema = new mongoose.Schema({
   pincode: {
     type: String,
     required: true,
-    match: /^\d{6}$/, // Pincode validation for 6 digits
+    match: /^\d{6}$/,
   },
   city: {
     type: String,
@@ -76,24 +75,20 @@ const addressSchema = new mongoose.Schema({
       "Puducherry",
     ],
   },
-  createdOn: {
-    type: Date,
-    default: Date.now,
-  },
-  updatedOn: {
-    type: Date,
-    default: Date.now,
-  },
 });
 
-// Order Schema
+// Define the Order Schema
 const orderSchema = new mongoose.Schema({
   _id: {
     type: mongoose.Schema.Types.ObjectId,
-    auto: true, // Automatically generated ID
+    auto: true,
+  },
+  userId: {
+    type: String,
+    required: true,
   },
   productId: {
-    type: String, // Assuming product ID is a string
+    type: String,
     required: true,
   },
   productName: {
@@ -108,6 +103,30 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  totalPaidAmount: {
+    type: Number,
+    required: true,
+  },
+  discount: {
+    type: Number,
+    required: true,
+    default: 0,
+  },
+  deliveryFee: {
+    type: String,
+    required: true,
+    default: "NA",
+  },
+  couponApplied: {
+    type: String,
+    enum: ["Yes", "No"],
+    default: "No",
+    required: true,
+  },
+  code: {
+    type: String,
+    required: false,
+  },
   orderStatus: {
     type: String,
     enum: [
@@ -118,7 +137,7 @@ const orderSchema = new mongoose.Schema({
       "Returned",
       "Refunded",
     ],
-    default: "Pending", // Default status is "Pending"
+    default: "Pending",
   },
   shippingAddress: {
     type: addressSchema,
@@ -138,20 +157,8 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
-// User Data Schema
-const UserDataSchema = new mongoose.Schema({
-  _id: {
-    type: mongoose.Schema.Types.ObjectId,
-    auto: true,
-  },
-  userId: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  addresses: [addressSchema],
-  orders: [orderSchema],
-});
+// Create the Order model from the schema
+const Order = mongoose.model("Order", orderSchema);
 
-const UserData = mongoose.model("UserData", UserDataSchema);
-module.exports = UserData;
+// Export the Order model so it can be used elsewhere in the app
+module.exports = Order;
