@@ -1,6 +1,7 @@
 const express = require("express");
 const LoginService = require("../../services/auth/auth_services");
 const ResponseManager = require("../../utils/responseManager");
+const { encrypt } = require("../../utils/encryptionUtils");
 
 const router = express.Router();
 
@@ -20,8 +21,16 @@ router.post("/login", async (req, res) => {
     // Login the user and generate JWT token
     const token = await LoginService.loginUser(email, password);
 
-    // Send success response with the token
-    ResponseManager.sendSuccess(res, { token }, 200, "Login successful");
+    // Encrypt the JWT token
+    const encryptedToken = encrypt(token);
+
+    // Send success response with the encrypted token
+    ResponseManager.sendSuccess(
+      res,
+      { token: encryptedToken },
+      200,
+      "Login successful"
+    );
   } catch (err) {
     ResponseManager.sendError(
       res,

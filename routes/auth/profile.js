@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../../models/user/userModel");
 const ResponseManager = require("../../utils/responseManager");
 const consoleManager = require("../../utils/consoleManager");
+const { decrypt } = require("../../utils/encryptionUtils");
 
 const router = express.Router();
 
@@ -10,12 +11,22 @@ const router = express.Router();
 const authenticateToken = (req, res, next) => {
   // Get token from Authorization header
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer <token>
+  const token = authHeader && authHeader.split(" ")[1]; 
 
   if (token == null)
     return ResponseManager.handleUnauthorizedError(res, "No token provided");
 
-  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+  // Decrypt the token
+  let decryptedToken;
+  try {
+    decryptedToken = decrypt(token); 
+  } catch (error) {
+    consoleManager.error("Failed to decrypt token");
+    return ResponseManager.handleUnauthorizedError(res, "Invalid token");
+  }
+
+  // Verify the decrypted token
+  jwt.verify(decryptedToken, process.env.JWT_SECRET, (err, user) => {
     if (err) {
       consoleManager.error("Invalid token");
       return ResponseManager.handleUnauthorizedError(res, "Invalid token");
