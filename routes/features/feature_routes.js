@@ -118,14 +118,21 @@ router.delete("/deleteFeature/:id", async (req, res) => {
 // Get all features
 router.get("/getAllFeatures", async (req, res) => {
   try {
-    const features = await FeatureService.getAllFeatures();
-    if (features.length === 0) {
+    const { name, page = 1, limit = 20 } = req.query;
+
+    const result = await FeatureService.getAllFeatures({ name }, page, limit);
+    if (result.length === 0) {
       return ResponseManager.sendSuccess(res, [], 200, "No features found");
     }
 
     return ResponseManager.sendSuccess(
       res,
-      features,
+      {
+        features: result.features,
+        totalPages: result.totalPages,
+        currentPage: result.currentPage,
+        totalFeatures: result.totalFeatures,
+      },
       200,
       "Features retrieved successfully"
     );
@@ -141,16 +148,26 @@ router.get("/getAllFeatures", async (req, res) => {
 });
 
 // Toggle feature status
-router.put('/removeFeature/:id', async (req, res) => {
+router.put("/removeFeature/:id", async (req, res) => {
   try {
-      const feature = await FeatureService.toggleFeatureStatus(req.params.id);
-      if (feature) {
-          ResponseManager.sendSuccess(res, feature, 200, 'Feature status toggled successfully');
-      } else {
-          ResponseManager.sendSuccess(res, [], 200, 'Feature not found for toggle');
-      }
+    const feature = await FeatureService.toggleFeatureStatus(req.params.id);
+    if (feature) {
+      ResponseManager.sendSuccess(
+        res,
+        feature,
+        200,
+        "Feature status toggled successfully"
+      );
+    } else {
+      ResponseManager.sendSuccess(res, [], 200, "Feature not found for toggle");
+    }
   } catch (err) {
-      ResponseManager.sendError(res, 500, 'INTERNAL_ERROR', 'Error toggling feature status');
+    ResponseManager.sendError(
+      res,
+      500,
+      "INTERNAL_ERROR",
+      "Error toggling feature status"
+    );
   }
 });
 

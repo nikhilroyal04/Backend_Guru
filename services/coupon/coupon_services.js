@@ -69,11 +69,28 @@ class CouponService {
   }
 
   // Get all coupons
-  async getAllCoupons() {
+  async getAllCoupons(query = {}, page = 1, limit = 20) {
     try {
-      const coupons = await Coupon.find();
+      const filterQuery = {};
+
+      if (query.name) {
+        filterQuery.name = { $regex: query.name, $options: "i" };
+      }
+
+      const coupons = await Coupon.find(filterQuery)
+        .limit(parseInt(limit, 10))
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10));
+
+      const totalCoupons = await Coupon.countDocuments(filterQuery);
+      const totalPages = Math.ceil(totalCoupons / limit);
+
       consoleManager.log(`Fetched ${coupons.length} coupons`);
-      return coupons;
+      return {
+        coupons,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        totalCoupons,
+      };
     } catch (err) {
       consoleManager.error(`Error fetching coupons: ${err.message}`);
       throw err;
@@ -82,18 +99,35 @@ class CouponService {
 
   //Get Active Coupon
 
-  async getActiveCoupons() {
+  async getActiveCoupons(query = {}, page = 1, limit = 20) {
     try {
-        // Fetch only active coupons
-        const coupons = await Coupon.find({ status: 'Active' });
-        consoleManager.log(`Fetched ${coupons.length} coupons`);
-        return coupons;
-    } catch (err) {
-        consoleManager.error(`Error fetching coupons: ${err.message}`);
-        throw err;
-    }
-}
+      const filterQuery = { status: "Active" }; // Include only active coupons
 
+      if (query.name) {
+        filterQuery.name = { $regex: query.name, $options: "i" };
+      }
+
+      // Fetch active coupons with the query filter applied
+      const coupons = await Coupon.find(filterQuery)
+        .limit(parseInt(limit, 10))
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10));
+
+      const totalCoupons = await Coupon.countDocuments(filterQuery);
+      const totalPages = Math.ceil(totalCoupons / limit);
+
+      consoleManager.log(`Fetched ${coupons.length} active coupons`);
+
+      return {
+        coupons,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        totalCoupons,
+      };
+    } catch (err) {
+      consoleManager.error(`Error fetching active coupons: ${err.message}`);
+      throw err;
+    }
+  }
 
   // Toggle coupon status between Active and Inactive
   async toggleCouponStatus(couponId) {

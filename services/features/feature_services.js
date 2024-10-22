@@ -1,4 +1,4 @@
-const Feature = require("../../models/features/featureModel"); 
+const Feature = require("../../models/features/featureModel");
 const consoleManager = require("../../utils/consoleManager");
 
 class FeatureService {
@@ -37,7 +37,9 @@ class FeatureService {
   async updateFeature(featureId, data) {
     try {
       data.updatedOn = Date.now();
-      const feature = await Feature.findByIdAndUpdate(featureId, data, { new: true });
+      const feature = await Feature.findByIdAndUpdate(featureId, data, {
+        new: true,
+      });
       if (!feature) {
         consoleManager.error("Feature not found for update");
         return null;
@@ -67,19 +69,36 @@ class FeatureService {
   }
 
   // Get all features
-  async getAllFeatures() {
+  async getAllFeatures(query = {}, page = 1, limit = 20) {
     try {
-      const features = await Feature.find();
+      const filterQuery = {};
+
+      if (query.name) {
+        filterQuery.name = { $regex: query.name, $options: "i" };
+      }
+
+      const features = await Feature.find(filterQuery)
+        .limit(parseInt(limit, 10))
+        .skip((parseInt(page, 10) - 1) * parseInt(limit, 10));
+
+      const totalFeatures = await Feature.countDocuments(filterQuery);
+      const totalPages = Math.ceil(totalFeatures / limit);
+
       consoleManager.log(`Fetched ${features.length} features`);
-      return features;
+      return {
+        features,
+        totalPages,
+        currentPage: parseInt(page, 10),
+        totalFeatures,
+      };
     } catch (err) {
       consoleManager.error(`Error fetching features: ${err.message}`);
       throw err;
     }
   }
 
-   // Toggle feature status between Active and Inactive
-   async toggleFeatureStatus(featureId) {
+  // Toggle feature status between Active and Inactive
+  async toggleFeatureStatus(featureId) {
     try {
       const feature = await Feature.findById(featureId);
       if (!feature) {
