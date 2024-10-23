@@ -25,7 +25,9 @@ class OrderService {
       const orders = await Order.find({ userId }).exec();
       return orders;
     } catch (err) {
-      consoleManager.error(`Error fetching orders for user ${userId}: ${err.message}`);
+      consoleManager.error(
+        `Error fetching orders for user ${userId}: ${err.message}`
+      );
       throw err;
     }
   }
@@ -84,12 +86,14 @@ class OrderService {
       // Build the query object for filtering
       const filterQuery = {};
 
-      if (query.productName) {
-        filterQuery.productName = { $regex: query.productName, $options: 'i' };
+      if (query.userId) {
+        filterQuery.userId = { $regex: query.userId, $options: "i" };
       }
+
       if (query.orderStatus) {
         filterQuery.orderStatus = query.orderStatus;
       }
+
       if (query.createdOn) {
         const date = new Date(query.createdOn);
         const nextDay = new Date(date);
@@ -121,7 +125,16 @@ class OrderService {
   // Toggle the order status (e.g., from 'Pending' to 'Shipped')
   async toggleOrderStatus(orderId, newStatus) {
     try {
-      if (!["Pending", "Shipped", "Delivered", "Cancelled", "Returned", "Refunded"].includes(newStatus)) {
+      if (
+        ![
+          "Pending",
+          "Shipped",
+          "Delivered",
+          "Cancelled",
+          "Returned",
+          "Refunded",
+        ].includes(newStatus)
+      ) {
         throw new Error("Invalid order status");
       }
 

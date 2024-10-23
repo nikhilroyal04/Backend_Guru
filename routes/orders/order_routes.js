@@ -103,8 +103,8 @@ router.delete('/deleteOrder/:id', async (req, res) => {
 // Get all orders with optional filters
 router.get('/getAllOrders', async (req, res) => {
   try {
-    const { productName, orderStatus, page = 1, limit = 20 } = req.query;
-    const result = await OrderService.getAllOrders({ productName, orderStatus }, page, limit);
+    const { userId, orderStatus, page = 1, limit = 20 } = req.query;
+    const result = await OrderService.getAllOrders({ userId, orderStatus }, page, limit);
 
     if (result.orders.length === 0) {
       return ResponseManager.sendSuccess(res, [], 200, 'No orders found');

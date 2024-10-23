@@ -57,7 +57,7 @@ const productSchema = new mongoose.Schema({
     required: true,
   },
   features: {
-    type: [String],
+    type: String,
     required: false,
   },
   media: {
