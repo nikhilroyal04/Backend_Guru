@@ -1,4 +1,4 @@
-const Role = require("../../models/role/roleModel"); 
+const Role = require("../../models/role/roleModel");
 const consoleManager = require("../../utils/consoleManager");
 
 class RoleService {
@@ -22,6 +22,21 @@ class RoleService {
   async getRoleById(roleId) {
     try {
       const role = await Role.findById(roleId);
+      if (!role) {
+        consoleManager.error("Role not found");
+        return null;
+      }
+      return role;
+    } catch (err) {
+      consoleManager.error(`Error fetching role: ${err.message}`);
+      throw err;
+    }
+  }
+
+  // Get a role by roleName
+  async getRoleByName(roleName) {
+    try {
+      const role = await Role.findOne({ roleName }); 
       if (!role) {
         consoleManager.error("Role not found");
         return null;

@@ -1,6 +1,7 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../../models/user/userModel");
+const RoleService = require("../../services/role/role_Services"); // Import your RoleService
 const ResponseManager = require("../../utils/responseManager");
 const consoleManager = require("../../utils/consoleManager");
 const { decrypt } = require("../../utils/encryptionUtils");
@@ -11,7 +12,7 @@ const router = express.Router();
 const authenticateToken = (req, res, next) => {
   // Get token from Authorization header
   const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; 
+  const token = authHeader && authHeader.split(" ")[1];
 
   if (token == null)
     return ResponseManager.handleUnauthorizedError(res, "No token provided");
@@ -19,7 +20,7 @@ const authenticateToken = (req, res, next) => {
   // Decrypt the token
   let decryptedToken;
   try {
-    decryptedToken = decrypt(token); 
+    decryptedToken = decrypt(token);
   } catch (error) {
     consoleManager.error("Failed to decrypt token");
     return ResponseManager.handleUnauthorizedError(res, "Invalid token");
@@ -46,10 +47,31 @@ router.get("/profile", authenticateToken, async (req, res) => {
       return ResponseManager.handleNotFoundError(res, "User not found");
     }
 
+    // Fetch role details using the role ID from user
+    const roleAttribute = await RoleService.getRoleByName(user.role);
+    if (!roleAttribute) {
+      consoleManager.error("Role not found for user");
+      return ResponseManager.handleNotFoundError(res, "Role not found");
+    }
+
+    // Prepare user profile response including role attributes
+    const userProfile = {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phoneNumber: user.phoneNumber,
+      role: user.role,
+      roleAttribute: roleAttribute,
+      status: user.status,
+      createdOn: user.createdOn,
+      updatedOn: user.updatedOn,
+      reason: user.createdBy,
+    };
+
     // Send success response with user profile details
     ResponseManager.sendSuccess(
       res,
-      user,
+      userProfile,
       200,
       "Profile details retrieved successfully"
     );

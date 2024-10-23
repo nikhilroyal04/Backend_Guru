@@ -1,6 +1,7 @@
 const User = require("../../models/user/userModel");
 const jwt = require("jsonwebtoken");
 const consoleManager = require("../../utils/consoleManager");
+const RoleService = require("../role/role_Services");
 
 class LoginService {
   async loginUser(email, password) {
@@ -19,12 +20,15 @@ class LoginService {
       }
 
       // Generate a JWT token with user details
+      const roleAttribute = await RoleService.getRoleByName(user.role)
+
       const payload = {
         id: user._id,
         name: user.name,
         email: user.email,
         phoneNumber: user.phoneNumber,
         role: user.role,
+        roleAttribute: roleAttribute,
         status: user.status,
         createdOn: user.createdOn,
         updatedOn: user.updatedOn,
