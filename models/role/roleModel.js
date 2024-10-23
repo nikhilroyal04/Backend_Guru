@@ -24,7 +24,7 @@ const roleSchema = new mongoose.Schema({
     required: false 
   },
   permission: {
-    type: [String],
+    type: String,
     required: false 
   }
 });
